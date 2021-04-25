@@ -7,7 +7,7 @@ using System.Net.Http;
 using System.Threading.Tasks;
 
 // Used below example for reference
-// https://docs.microsoft.com/en-us/dotnet/csharp/programming-guide/concepts/async/start-multiple-async-tasks-and-process-them-as-they-complete
+// https://markheath.net/post/constraining-concurrent-threads-csharp
 
 namespace FileServiceClient
 {
