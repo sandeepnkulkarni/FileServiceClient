@@ -1,8 +1,8 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 
@@ -21,21 +21,27 @@ namespace FileServiceClient
         {
             var stopwatch = Stopwatch.StartNew();
 
-            IEnumerable<Task<string>> fileSizesQuery =
-                from fileName in Directory.EnumerateFiles(@"C:\DemoFolder", "*", SearchOption.AllDirectories)
-                select GetFileSize(fileName);
+            uint maxThreads = 4;
 
-            List<Task<string>> fileSizeTasks = fileSizesQuery.ToList();
+            var concurrentQueue = new ConcurrentQueue<string>(Directory.EnumerateFiles(@"C:\DemoFolder", "*", SearchOption.AllDirectories));
 
-            int filesCount = 0;
-            while (fileSizeTasks.Any())
+            List<Task> fileSizeTasks = new List<Task>();
+
+            int filesCount = concurrentQueue.Count;
+
+            for (int i = 0; i < maxThreads; i++)
             {
-                Task<string> finishedTask = await Task.WhenAny(fileSizeTasks);
-                fileSizeTasks.Remove(finishedTask);
-                string result = await finishedTask;
-                Console.WriteLine($"Finished for {result}");
-                filesCount += 1;
+                fileSizeTasks.Add(Task.Run(async () =>
+                {
+                    while (concurrentQueue.TryDequeue(out string fileName))
+                    {
+                        string result = await GetFileSize(fileName);
+                        Console.WriteLine($"Finished for {fileName} with {result}");
+                    }
+                }));
             }
+
+            await Task.WhenAll(fileSizeTasks);
 
             stopwatch.Stop();
             Console.WriteLine($"\n\n\nTotal files count: {filesCount}.\nElapsed time: {stopwatch.Elapsed}\n");
