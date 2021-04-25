@@ -38,7 +38,7 @@ namespace FileServiceClient
             }
 
             stopwatch.Stop();
-            Console.WriteLine($"Elapsed time: {stopwatch.Elapsed}\n");
+            Console.WriteLine($"\n\n\nTotal files count: {filesCount}.\nElapsed time: {stopwatch.Elapsed}\n");
 
             Console.ReadLine();
         }
